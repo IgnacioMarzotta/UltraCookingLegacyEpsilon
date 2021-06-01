@@ -8,7 +8,7 @@
 * Fernando Flores
 * Bryan Sanzana
 
-Curso: Tópicos de Especialidad en Informática II
+Curso: Tópicos de Especialidad en Informática II  /  
 Docente: Mauricio C. Figueroa, Universidad Andres Bello
             
             
