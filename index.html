@@ -3,119 +3,239 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>Unity WebGL Player | UltraCookingLegacy</title>
+    <title>Ultra Cooking Legacy Epsilon</title>
     <link rel="shortcut icon" href="TemplateData/favicon.ico">
     <link rel="stylesheet" href="TemplateData/style.css">
+    <!-- Bootstrap CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-+0n0xVW2eSR5OomGNYDnhzAbDsOXxcvSN1TPprVMTNDbiYZCxYbOOl7+AMvyTG2x" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js" integrity="sha384-IQsoLXl5PILFhosVNubq5LC7Qb9DXgDA9i+tQ8Zj3iwWAwPtgFTxbJ8NT4GN1R8p" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.min.js" integrity="sha384-Atwg2Pkwv9vp0ygtn1JAojH0nYbwNJLPhwyoVbhoPwBhjQPR5VtM2+xf0Uwh9KtT" crossorigin="anonymous"></script>
+    <!-- AOS CDN -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
   </head>
   <body>
-    <div id="unity-container" class="unity-desktop">
-      <canvas id="unity-canvas" width=1280 height=720></canvas>
-      <div id="unity-loading-bar">
-        <div id="unity-logo"></div>
-        <div id="unity-progress-bar-empty">
-          <div id="unity-progress-bar-full"></div>
+    <script>AOS.init();</script>
+    <img src="TemplateData/pixelart.jpg" alt="No hay imagen">
+    <div class="container">
+      <div id="unity-container" class="unity-desktop">
+        <canvas id="unity-canvas" width=1280 height=720></canvas>
+        <div id="unity-loading-bar">
+          <div id="unity-logo"></div>
+          <div id="unity-progress-bar-empty">
+            <div id="unity-progress-bar-full"></div>
+          </div>
+        </div>
+        <div id="unity-warning"> </div>
+        <div id="unity-footer" style="background-color: white;">
+          <div id="unity-webgl-logo"></div>
+          <div id="unity-fullscreen-button"></div>
         </div>
       </div>
-      <div id="unity-warning"> </div>
-      <div id="unity-footer">
-        <div id="unity-webgl-logo"></div>
-        <div id="unity-fullscreen-button"></div>
-        <div id="unity-build-title">UltraCookingLegacy</div>
+      <script>
+        var container = document.querySelector("#unity-container");
+        var canvas = document.querySelector("#unity-canvas");
+        var loadingBar = document.querySelector("#unity-loading-bar");
+        var progressBarFull = document.querySelector("#unity-progress-bar-full");
+        var fullscreenButton = document.querySelector("#unity-fullscreen-button");
+        var warningBanner = document.querySelector("#unity-warning");
+  
+        // Shows a temporary message banner/ribbon for a few seconds, or
+        // a permanent error message on top of the canvas if type=='error'.
+        // If type=='warning', a yellow highlight color is used.
+        // Modify or remove this function to customize the visually presented
+        // way that non-critical warnings and error messages are presented to the
+        // user.
+        function unityShowBanner(msg, type) {
+          function updateBannerVisibility() {
+            warningBanner.style.display = warningBanner.children.length ? 'block' : 'none';
+          }
+          var div = document.createElement('div');
+          div.innerHTML = msg;
+          warningBanner.appendChild(div);
+          if (type == 'error') div.style = 'background: red; padding: 10px;';
+          else {
+            if (type == 'warning') div.style = 'background: yellow; padding: 10px;';
+            setTimeout(function() {
+              warningBanner.removeChild(div);
+              updateBannerVisibility();
+            }, 5000);
+          }
+          updateBannerVisibility();
+        }
+  
+        var buildUrl = "Build";
+        var loaderUrl = buildUrl + "/Build.loader.js";
+        var config = {
+          dataUrl: buildUrl + "/Build.data",
+          frameworkUrl: buildUrl + "/Build.framework.js",
+          codeUrl: buildUrl + "/Build.wasm",
+          streamingAssetsUrl: "StreamingAssets",
+          companyName: "EpsilonStudios",
+          productName: "UltraCookingLegacy",
+          productVersion: "1.0",
+          showBanner: unityShowBanner,
+        };
+  
+        // By default Unity keeps WebGL canvas render target size matched with
+        // the DOM size of the canvas element (scaled by window.devicePixelRatio)
+        // Set this to false if you want to decouple this synchronization from
+        // happening inside the engine, and you would instead like to size up
+        // the canvas DOM size and WebGL render target sizes yourself.
+        // config.matchWebGLToCanvasSize = false;
+  
+        if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+          // Mobile device style: fill the whole browser client area with the game canvas:
+  
+          var meta = document.createElement('meta');
+          meta.name = 'viewport';
+          meta.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes';
+          document.getElementsByTagName('head')[0].appendChild(meta);
+          container.className = "unity-mobile";
+  
+          // To lower canvas resolution on mobile devices to gain some
+          // performance, uncomment the following line:
+          // config.devicePixelRatio = 1;
+  
+          canvas.style.width = window.innerWidth + 'px';
+          canvas.style.height = window.innerHeight + 'px';
+  
+          unityShowBanner('WebGL builds are not supported on mobile devices.');
+        } else {
+          // Desktop style: Render the game canvas in a window that can be maximized to fullscreen:
+  
+          canvas.style.width = "1280px";
+          canvas.style.height = "720px";
+        }
+  
+        loadingBar.style.display = "block";
+  
+        var script = document.createElement("script");
+        script.src = loaderUrl;
+        script.onload = () => {
+          createUnityInstance(canvas, config, (progress) => {
+            progressBarFull.style.width = 100 * progress + "%";
+          }).then((unityInstance) => {
+            loadingBar.style.display = "none";
+            fullscreenButton.onclick = () => {
+              unityInstance.SetFullscreen(1);
+            };
+          }).catch((message) => {
+            alert(message);
+          });
+        };
+        document.body.appendChild(script);
+      </script>
+      <div class="jumbotron main-jumbotron" data-aos="fade-right">
+        <h2 style="text-align: center;">Informacion general</h2>
+        <hr style="color: red;" class="w-50 mx-auto">
+        <div class="row">
+          <div class="col-5">
+            <h4>Ultra Cooking Legacy Epsilon fue desarrollado por:</h1>
+            <h5>"Epsilon Studios"</h5>
+            <ul>
+              <li>Ignacio Marzotta</li>
+              <li>Elias Halabi</li>
+              <li>Tomas Arellano</li>
+              <li>Fernando Flores</li>
+              <li>Bryan Sanzana</li>
+            </ul>
+            <h6>Curso: Tópicos de Especialidad en Informática II</h6>
+            <h6>Docente: Mauricio C. Figueroa, Universidad Andres Bello</h6>
+          </div>
+          
+          <div class="col-2"></div>
+
+          <div class="col-5">
+            <h4>Tecnologias utilizadas:</h4>
+            <ol>
+              <li><b>Unity</b> (Version 2021.1.3f1)</li>
+              <li><b>Modulo WebGL</b> (Soporte para HTML5)</li>
+              <li><b>Sony Vegas</b> (Produccion de audio y cinematicas)</li>
+              <li><b>Adobe Photoshop</b> (Poduccion de assets visuales)</li>
+              <li><b>GitHub</b> (Hosting de repositorio y servidor web)</li>
+              <li><b>Git / Unity Collaborate</b> (Control de versiones)</li>
+              <li><b>Microsoft Office</b> (Preparacion de documentos de desarrollo)</li>
+            </ol>
+            <h6>Todos los programas listados estan bajo licencias oficiales con fin personales/de estudiante.</h6>
+          </div>
+        </div>
+      </div>
+
+      <div class="jumbotron main-jumbotron" data-aos="fade-left">
+        <h2 style="text-align: center;">Controles</h2>
+        <hr style="color: red;" class="w-50 mx-auto">
+        
+        <div class="row">
+          <div class="col-6">
+            <table class="table" style="color: white;">
+              
+              <thead>
+                <tr>
+                  <th scope="col">Tecla</th>
+                  <th scope="col">Uso</th>
+                </tr>
+              </thead>
+    
+              <tbody>
+                <tr>
+                  <td>A</td>
+                  <td>Moverse a la izquierda</td>
+                </tr>
+                <tr>
+                  <td>D</td>
+                  <td>Moverse a la derecha</td>
+                </tr>
+                <tr>
+                  <td>S</td>
+                  <td>Ataque hacia abajo</td>
+                </tr>
+                <tr>
+                  <td>P</td>
+                  <td>Pausar el juego</td>
+                </tr>
+                <tr>
+                  <td>Espacio</td>
+                  <td>Saltar</td>
+                </tr>
+                <tr>
+                  <td>Shift</td>
+                  <td>Dash</td>
+                </tr>
+              </tbody>
+    
+            </table>
+          </div>
+
+          <div class="col-6">
+            <div class="mt-5">
+              <p><b>Dash:</b> El dash es un pequeño ataque con impulso hacia adelante, derrotando cualquier enemigo que se interponga en su camino.</p>
+              <p><b>Salto:</b> Con Espacio puedes saltar, si lo mantienes presionado podras saltar mas alto.</p>
+              <p><b><i>"Tecnica secreta":</b></i> Si presionas Espacio y Shift al mismo tiempo (realizando un Dash y saltando a la vez), lograras impulsarte hacia arriba mas alto de lo normal. Esto es muy util para alcanzar plataformas muy altas!. </p>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+      <div class="jumbotron main-jumbotron" data-aos="fade-right">
+        <h2 style="text-align: center;">Historia</h2>
+        <hr style="color: red;" class="w-50 mx-auto">
+        <div class="row">
+          <div class="col-4">
+            <p class="story-paragraph" style="  text-align: justify; text-justify: inter-word;">
+              Tomarás el control de <b><i>Chef</i></b>, un cocinero renegado enviado desde el futuro hacia una versión distópica de nuestro presente. En esta línea temporal, el malvado Grodom Ramsey se apoderó del mundo de la cocina con el fin de "purificarla", eliminando todas sus impurezas (según su propio gusto).
+            <br>
+            <br>
+              Utilizando métodos de cocina prohibidos, Grodom trajo a la vida a malvados ingredientes, los cuales se han expandido por todo el planeta!. Es tu deber recorrer toda la Tierra, aprender sobre la cocina de cada rincón del mundo, y derrotar al maléfico Grodom Ramsey!.
+            </p>
+          </div>
+          <div class="col-8">
+            <img src="TemplateData/worldmap.png" alt="Mapa mundi" class="img-fluid img-thumbnail">
+          </div>
+        </div>
       </div>
     </div>
-    <script>
-      var container = document.querySelector("#unity-container");
-      var canvas = document.querySelector("#unity-canvas");
-      var loadingBar = document.querySelector("#unity-loading-bar");
-      var progressBarFull = document.querySelector("#unity-progress-bar-full");
-      var fullscreenButton = document.querySelector("#unity-fullscreen-button");
-      var warningBanner = document.querySelector("#unity-warning");
-
-      // Shows a temporary message banner/ribbon for a few seconds, or
-      // a permanent error message on top of the canvas if type=='error'.
-      // If type=='warning', a yellow highlight color is used.
-      // Modify or remove this function to customize the visually presented
-      // way that non-critical warnings and error messages are presented to the
-      // user.
-      function unityShowBanner(msg, type) {
-        function updateBannerVisibility() {
-          warningBanner.style.display = warningBanner.children.length ? 'block' : 'none';
-        }
-        var div = document.createElement('div');
-        div.innerHTML = msg;
-        warningBanner.appendChild(div);
-        if (type == 'error') div.style = 'background: red; padding: 10px;';
-        else {
-          if (type == 'warning') div.style = 'background: yellow; padding: 10px;';
-          setTimeout(function() {
-            warningBanner.removeChild(div);
-            updateBannerVisibility();
-          }, 5000);
-        }
-        updateBannerVisibility();
-      }
-
-      var buildUrl = "Build";
-      var loaderUrl = buildUrl + "/Build.loader.js";
-      var config = {
-        dataUrl: buildUrl + "/Build.data",
-        frameworkUrl: buildUrl + "/Build.framework.js",
-        codeUrl: buildUrl + "/Build.wasm",
-        streamingAssetsUrl: "StreamingAssets",
-        companyName: "EpsilonStudios",
-        productName: "UltraCookingLegacy",
-        productVersion: "1.0",
-        showBanner: unityShowBanner,
-      };
-
-      // By default Unity keeps WebGL canvas render target size matched with
-      // the DOM size of the canvas element (scaled by window.devicePixelRatio)
-      // Set this to false if you want to decouple this synchronization from
-      // happening inside the engine, and you would instead like to size up
-      // the canvas DOM size and WebGL render target sizes yourself.
-      // config.matchWebGLToCanvasSize = false;
-
-      if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-        // Mobile device style: fill the whole browser client area with the game canvas:
-
-        var meta = document.createElement('meta');
-        meta.name = 'viewport';
-        meta.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes';
-        document.getElementsByTagName('head')[0].appendChild(meta);
-        container.className = "unity-mobile";
-
-        // To lower canvas resolution on mobile devices to gain some
-        // performance, uncomment the following line:
-        // config.devicePixelRatio = 1;
-
-        canvas.style.width = window.innerWidth + 'px';
-        canvas.style.height = window.innerHeight + 'px';
-
-        unityShowBanner('WebGL builds are not supported on mobile devices.');
-      } else {
-        // Desktop style: Render the game canvas in a window that can be maximized to fullscreen:
-
-        canvas.style.width = "1280px";
-        canvas.style.height = "720px";
-      }
-
-      loadingBar.style.display = "block";
-
-      var script = document.createElement("script");
-      script.src = loaderUrl;
-      script.onload = () => {
-        createUnityInstance(canvas, config, (progress) => {
-          progressBarFull.style.width = 100 * progress + "%";
-        }).then((unityInstance) => {
-          loadingBar.style.display = "none";
-          fullscreenButton.onclick = () => {
-            unityInstance.SetFullscreen(1);
-          };
-        }).catch((message) => {
-          alert(message);
-        });
-      };
-      document.body.appendChild(script);
-    </script>
   </body>
 </html>
