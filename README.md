@@ -1,4 +1,3 @@
-# UltraCookingLegacyEpsilon
 <h2>Ultra Cooking Legacy Epsilon fue desarrollado por:</h2>
 
 "Epsilon Studios"
